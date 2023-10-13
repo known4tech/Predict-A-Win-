@@ -1,5 +1,5 @@
 streamlit
-sklearn
+scikit-learn
 pandas
 scikit-learn==0.24
 
