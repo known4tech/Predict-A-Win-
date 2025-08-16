@@ -99,8 +99,10 @@ def create_ball_by_ball_features(match_df, deliveries):
     # Convert to numeric type before cumsum operations
     delivery_df['total_runs_y'] = pd.to_numeric(delivery_df['total_runs_y'], errors='coerce').fillna(0)
     
-    # Calculate current score (cumulative sum of runs)
-    delivery_df['current_score'] = delivery_df.groupby('match_id').cumsum()['total_runs_y']
+    # Resolve merge conflict by ensuring proper cumsum operation
+    delivery_df['player_dismissed'] = pd.to_numeric(delivery_df['player_dismissed'], errors='coerce').fillna(0).astype(int)
+    delivery_df['current_score'] = delivery_df.groupby('match_id')['total_runs_y'].cumsum()
+    wickets = delivery_df.groupby('match_id')['player_dismissed'].cumsum().values
     
     # Calculate runs left
     delivery_df['runs_left'] = delivery_df['total_runs_x'] - delivery_df['current_score']
@@ -117,8 +119,9 @@ def create_ball_by_ball_features(match_df, deliveries):
     # Convert to numeric type before cumsum operations
     delivery_df['player_dismissed'] = pd.to_numeric(delivery_df['player_dismissed'], errors='coerce').fillna(0)
     
-    # Calculate wickets left
-    wickets = delivery_df.groupby('match_id').cumsum()['player_dismissed'].values
+    # Ensure 'player_dismissed' is numeric before applying cumsum
+    delivery_df['player_dismissed'] = pd.to_numeric(delivery_df['player_dismissed'], errors='coerce').fillna(0).astype(int)
+    wickets = delivery_df.groupby('match_id')['player_dismissed'].cumsum().values
     delivery_df['wickets_left'] = 10 - wickets
     
     # Calculate current run rate
@@ -182,9 +185,10 @@ def train_model(final_df):
     print(f"Test set shape: {X_test.shape}")
     
     # Create column transformer for categorical variables
+    # Updated ColumnTransformer to ensure compatibility with scikit-learn==1.3.2
     column_transformer = ColumnTransformer(
         transformers=[
-            ('encoder', OneHotEncoder(sparse_output=False, drop='first'), 
+            ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False, drop='first'), 
              ['batting_team', 'bowling_team', 'city'])
         ],
         remainder='passthrough'

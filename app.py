@@ -152,65 +152,72 @@ else:
                     'req_run_rate': [requiredrunrate]
                 })
                 
-                result = pipe.predict_proba(input_df)
-                loss_prob = result[0][0]
-                win_prob = result[0][1]
-                
-                # Display results with improved UI
-                st.markdown("## 📊 Win Probability")
-                
-                # Create probability chart
-                fig = go.Figure(data=[
-                    go.Bar(
-                        x=[battingteam, bowlingteam],
-                        y=[win_prob * 100, loss_prob * 100],
-                        marker_color=['#1f77b4', '#ff7f0e'],
-                        text=[f'{win_prob*100:.1f}%', f'{loss_prob*100:.1f}%'],
-                        textposition='auto',
+                # Ensure compatibility with the updated pipeline and retrained model
+                pipe = pickle.load(open('pipe.pkl', 'rb'))
+
+                # Validate input DataFrame columns before prediction
+                if 'batting_team' not in input_df.columns or 'bowling_team' not in input_df.columns:
+                    st.error("Model input columns are missing. Please check the retrained model.")
+                else:
+                    result = pipe.predict_proba(input_df)
+                    loss_prob = result[0][0]
+                    win_prob = result[0][1]
+                    
+                    # Display results with improved UI
+                    st.markdown("## 📊 Win Probability")
+                    
+                    # Create probability chart
+                    fig = go.Figure(data=[
+                        go.Bar(
+                            x=[battingteam, bowlingteam],
+                            y=[win_prob * 100, loss_prob * 100],
+                            marker_color=['#1f77b4', '#ff7f0e'],
+                            text=[f'{win_prob*100:.1f}%', f'{loss_prob*100:.1f}%'],
+                            textposition='auto',
+                        )
+                    ])
+                    
+                    fig.update_layout(
+                        title="Win Probability Comparison",
+                        xaxis_title="Teams",
+                        yaxis_title="Win Probability (%)",
+                        yaxis=dict(range=[0, 100]),
+                        height=400
                     )
-                ])
-                
-                fig.update_layout(
-                    title="Win Probability Comparison",
-                    xaxis_title="Teams",
-                    yaxis_title="Win Probability (%)",
-                    yaxis=dict(range=[0, 100]),
-                    height=400
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Display match statistics
-                col_stats1, col_stats2 = st.columns(2)
-                
-                with col_stats1:
-                    st.metric(
-                        label=f"{battingteam} Win Probability",
-                        value=f"{win_prob*100:.1f}%"
-                    )
-                    st.metric(
-                        label="Required Run Rate",
-                        value=f"{requiredrunrate:.2f}"
-                    )
-                
-                with col_stats2:
-                    st.metric(
-                        label=f"{bowlingteam} Win Probability",
-                        value=f"{loss_prob*100:.1f}%"
-                    )
-                    st.metric(
-                        label="Current Run Rate",
-                        value=f"{currentrunrate:.2f}"
-                    )
-                
-                # Additional match info
-                st.markdown("### 📈 Match Statistics")
-                stats_data = {
-                    'Metric': ['Runs Required', 'Balls Remaining', 'Wickets in Hand', 'Run Rate Difference'],
-                    'Value': [runs_left, balls_left, wickets_remaining, f"{requiredrunrate - currentrunrate:.2f}"]
-                }
-                st.dataframe(pd.DataFrame(stats_data), hide_index=True)
-                
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Display match statistics
+                    col_stats1, col_stats2 = st.columns(2)
+                    
+                    with col_stats1:
+                        st.metric(
+                            label=f"{battingteam} Win Probability",
+                            value=f"{win_prob*100:.1f}%"
+                        )
+                        st.metric(
+                            label="Required Run Rate",
+                            value=f"{requiredrunrate:.2f}"
+                        )
+                    
+                    with col_stats2:
+                        st.metric(
+                            label=f"{bowlingteam} Win Probability",
+                            value=f"{loss_prob*100:.1f}%"
+                        )
+                        st.metric(
+                            label="Current Run Rate",
+                            value=f"{currentrunrate:.2f}"
+                        )
+                    
+                    # Additional match info
+                    st.markdown("### 📈 Match Statistics")
+                    stats_data = {
+                        'Metric': ['Runs Required', 'Balls Remaining', 'Wickets in Hand', 'Run Rate Difference'],
+                        'Value': [runs_left, balls_left, wickets_remaining, f"{requiredrunrate - currentrunrate:.2f}"]
+                    }
+                    st.dataframe(pd.DataFrame(stats_data), hide_index=True)
+                    
         except ZeroDivisionError:
             st.error("⚠️ Please fill all the required details correctly")
         except Exception as e:
