@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 """
 IPL Win Probability Predictor - Model Retraining Script
-
 This script retrains the IPL win probability prediction model with scikit-learn==1.3.2
 for compatibility with the Streamlit deployment.
-
 Author: Updated for scikit-learn 1.3.2 compatibility
 Date: August 17, 2025
 """
-
 import pandas as pd
 import numpy as np
 import pickle
@@ -99,6 +96,9 @@ def create_ball_by_ball_features(match_df, deliveries):
     
     print(f"Ball-by-ball data shape: {delivery_df.shape}")
     
+    # Convert to numeric type before cumsum operations
+    delivery_df['total_runs_y'] = pd.to_numeric(delivery_df['total_runs_y'], errors='coerce').fillna(0)
+    
     # Calculate current score (cumulative sum of runs)
     delivery_df['current_score'] = delivery_df.groupby('match_id').cumsum()['total_runs_y']
     
@@ -113,7 +113,9 @@ def create_ball_by_ball_features(match_df, deliveries):
     delivery_df['player_dismissed'] = delivery_df['player_dismissed'].apply(
         lambda x: x if x == "0" else "1"
     )
-    delivery_df['player_dismissed'] = delivery_df['player_dismissed'].astype('int')
+    
+    # Convert to numeric type before cumsum operations
+    delivery_df['player_dismissed'] = pd.to_numeric(delivery_df['player_dismissed'], errors='coerce').fillna(0)
     
     # Calculate wickets left
     wickets = delivery_df.groupby('match_id').cumsum()['player_dismissed'].values
