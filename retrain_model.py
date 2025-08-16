@@ -122,7 +122,7 @@ def create_ball_by_ball_features(match_df, deliveries):
     # Ensure 'player_dismissed' is numeric before applying cumsum
     delivery_df['player_dismissed'] = pd.to_numeric(delivery_df['player_dismissed'], errors='coerce').fillna(0).astype(int)
     wickets = delivery_df.groupby('match_id')['player_dismissed'].cumsum().values
-    delivery_df['wickets_left'] = 10 - wickets
+    delivery_df['wickets_left'] = 10 - delivery_df.groupby('match_id')['player_dismissed'].cumsum().values
     
     # Calculate current run rate
     delivery_df['cur_run_rate'] = (delivery_df['current_score'] * 6) / (

@@ -152,6 +152,9 @@ else:
                     'req_run_rate': [requiredrunrate]
                 })
                 
+                # Ensure 'wickets_left' is included in the input DataFrame
+                input_df['wickets_left'] = input_df['wickets']
+                
                 # Ensure compatibility with the updated pipeline and retrained model
                 pipe = pickle.load(open('pipe.pkl', 'rb'))
 
